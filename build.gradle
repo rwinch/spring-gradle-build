@@ -1,0 +1,85 @@
+/*
+ * Copyright 2002-2019 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+plugins {
+	id 'java-gradle-plugin'
+	id 'maven-publish'
+	id 'com.gradle.plugin-publish' version '0.10.1'
+	id "com.jfrog.artifactory" version '4.13.0'
+	id 'org.jetbrains.kotlin.jvm' version '1.3.61'
+}
+apply from: "$rootDir/gradle/artifactory.gradle"
+
+repositories {
+	gradlePluginPortal()
+	mavenCentral()
+}
+
+pluginBundle {
+	website = 'https://github.com/spring-io/spring-gradle-build'
+	vcsUrl = 'https://github.com/spring-io/spring-gradle-build.git'
+	description = project.description
+}
+
+gradlePlugin {
+	plugins {
+		convention {
+			id = 'io.spring.build.convention.asciidoctor'
+			displayName = 'Spring Asciidoctor Convention Plugin'
+			description = 'Configures Spring Defaults for Asciidoctor'
+			implementationClass = 'io.spring.gradle.build.convention.AsciidoctorConventionPlugin'
+		}
+	}
+}
+
+dependencies {
+	implementation 'org.asciidoctor:asciidoctor-gradle-jvm:3.+'
+	testImplementation 'org.assertj:assertj-core:3.+'
+	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.+'
+	testImplementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.+'
+}
+
+test {
+	useJUnitPlatform()
+}
+
+repositories {
+	mavenCentral()
+}
+
+compileKotlin {
+	kotlinOptions {
+		jvmTarget = "1.8"
+	}
+}
+
+compileTestKotlin {
+	kotlinOptions {
+		jvmTarget = "1.8"
+	}
+}
+
+ext.snapshotBuild = version.contains("SNAPSHOT")
+//
+//if (!snapshotBuild) {
+//	project.tasks.named('deployArtifacts', new Action<Task>() {
+//		@Override
+//		void execute(Task deployArtifacts) {
+//			deployArtifacts.dependsOn project.tasks.publishPlugins
+//		}
+//	})
+//}
