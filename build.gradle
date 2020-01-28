@@ -40,7 +40,7 @@ gradlePlugin {
 			id = 'io.spring.build.convention.asciidoctor'
 			displayName = 'Spring Asciidoctor Convention Plugin'
 			description = 'Configures Spring Defaults for Asciidoctor'
-			implementationClass = 'io.spring.gradle.build.convention.AsciidoctorConventionPlugin'
+			implementationClass = 'io.spring.gradle.convention.AsciidoctorConventionPlugin'
 		}
 	}
 }
