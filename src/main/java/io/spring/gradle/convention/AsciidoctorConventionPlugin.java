@@ -77,8 +77,9 @@ public class AsciidoctorConventionPlugin implements Plugin<Project> {
 		project.getPlugins().withType(AsciidoctorJPlugin.class, (asciidoctorPlugin) -> {
 			createDefaultAsciidoctorRepository(project);
 			makeAllWarningsFatal(project);
-			UnzipDocumentationResources unzipResources = createUnzipDocumentationResourcesTask(project);
+			Sync unzipResources = createUnzipDocumentationResourcesTask(project);
 			project.getTasks().withType(AbstractAsciidoctorTask.class, (asciidoctorTask) -> {
+				asciidoctorTask.dependsOn(unzipResources);
 				configureExtensions(project, asciidoctorTask);
 				configureCommonAttributes(project, asciidoctorTask);
 				configureOptions(asciidoctorTask);
@@ -161,6 +162,20 @@ public class AsciidoctorConventionPlugin implements Plugin<Project> {
 		asciidoctorTask.dependsOn(syncDocumentationSource);
 		asciidoctorTask.setSourceDir(project.relativePath(new File(syncDocumentationSource.getDestinationDir(), asciidoctorTask.getSourceDir().getName())));
 		return syncDocumentationSource;
+	}
+
+
+	private Sync createUnzipDocumentationResourcesTask(Project project) {
+		Configuration documentationResources = project.getConfigurations().maybeCreate("documentationResources");
+		documentationResources.getDependencies()
+				.add(project.getDependencies().create("io.spring.docresources:spring-doc-resources:0.1.3.RELEASE"));
+		Sync unzipResources = project.getTasks().create("unzipDocumentationResources",
+				Sync.class);
+		unzipResources.into(new File(project.getBuildDir(), "docs/resources"));
+		documentationResources.getAsFileTree().forEach(file ->
+			unzipResources.from(project.zipTree(file))
+		);
+		return unzipResources;
 	}
 
 	private void configureOptions(AbstractAsciidoctorTask asciidoctorTask) {
