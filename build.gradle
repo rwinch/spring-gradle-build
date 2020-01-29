@@ -37,7 +37,7 @@ pluginBundle {
 gradlePlugin {
 	plugins {
 		convention {
-			id = 'io.spring.build.convention.asciidoctor'
+			id = 'io.spring.convention.asciidoctor'
 			displayName = 'Spring Asciidoctor Convention Plugin'
 			description = 'Configures Spring Defaults for Asciidoctor'
 			implementationClass = 'io.spring.gradle.convention.AsciidoctorConventionPlugin'

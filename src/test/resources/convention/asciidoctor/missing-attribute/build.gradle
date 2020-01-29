@@ -1,4 +1,4 @@
 plugins {
-	id "io.spring.build.convention.asciidoctor"
+	id "io.spring.convention.asciidoctor"
 	id "org.asciidoctor.jvm.convert"
 }
