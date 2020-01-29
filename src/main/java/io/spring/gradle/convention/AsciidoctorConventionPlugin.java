@@ -80,51 +80,53 @@ public class AsciidoctorConventionPlugin implements Plugin<Project> {
 			Sync unzipResources = createUnzipDocumentationResourcesTask(project);
 			project.getTasks().withType(AbstractAsciidoctorTask.class, (asciidoctorTask) -> {
 				asciidoctorTask.dependsOn(unzipResources);
+				configureHtmlOnlyAttributes(project, asciidoctorTask);
 				configureExtensions(project, asciidoctorTask);
 				configureCommonAttributes(project, asciidoctorTask);
 				configureOptions(asciidoctorTask);
-				asciidoctorTask.baseDirFollowsSourceDir();
+				asciidoctorTask.baseDirFollowsSourceFile();
 				Sync syncSource = createSyncDocumentationSourceTask(project, asciidoctorTask);
+				syncSource.from(unzipResources, (resources) -> resources.into(asciidoctorTask.getOutputDir().getName(), new Action<CopySpec>() {
+					@Override
+					public void execute(CopySpec copySpec) {
+						copySpec.setDuplicatesStrategy(DuplicatesStrategy.EXCLUDE);
+					}
+				}));
+
+				asciidoctorTask.doFirst(new Action<Task>() {
+
+					@Override
+					public void execute(Task task) {
+						for (File backendOutputDir : asciidoctorTask.getBackendOutputDirectories()) {
+							System.out.println(asciidoctorTask.getSourceDir() + " to outputDir "
+									+ backendOutputDir);
+							project.copy((spec) -> {
+								spec.from(asciidoctorTask.getSourceDir());
+								spec.into(backendOutputDir);
+								spec.include("css/**", "js/**");
+							});
+						}
+					}
+				});
 				if (asciidoctorTask instanceof AsciidoctorTask) {
 					configureHtmlOnlyAttributes(project, asciidoctorTask);
-					syncSource.from(unzipResources, (resources) -> resources.into(asciidoctorTask.getOutputDir().getName(), new Action<CopySpec>() {
-						@Override
-						public void execute(CopySpec copySpec) {
-							copySpec.setDuplicatesStrategy(DuplicatesStrategy.EXCLUDE);
-						}
-					}));
-					asciidoctorTask.doFirst(new Action<Task>() {
-
-						@Override
-						public void execute(Task task) {
-							for (File backendOutputDir : asciidoctorTask.getBackendOutputDirectories()) {
-								System.out.println(asciidoctorTask.getSourceDir() + " to outputDir "
-										+ backendOutputDir);
-								project.copy((spec) -> {
-									spec.from(asciidoctorTask.getSourceDir());
-									spec.into(backendOutputDir);
-									spec.include("css/**", "js/**");
-								});
-							}
-						}
-					});
 				}
 			});
 		});
 	}
 
 	private void createDefaultAsciidoctorRepository(Project project) {
-		project.getGradle().afterProject(new Action<Project>() {
-			@Override
-			public void execute(Project project) {
+//		project.getGradle().afterProject(new Action<Project>() {
+//			@Override
+//			public void execute(Project project) {
 				RepositoryHandler repositories = project.getRepositories();
 				if (repositories.isEmpty()) {
 					repositories.maven(repo -> {
 						repo.setUrl(URI.create("https://repo.spring.io/libs-release"));
 					});
 				}
-			}
-		});
+//			}
+//		});
 	}
 
 	private void makeAllWarningsFatal(Project project) {
@@ -142,17 +144,6 @@ public class AsciidoctorConventionPlugin implements Plugin<Project> {
 		asciidoctorTask.configurations(extensionsConfiguration);
 	}
 
-	private UnzipDocumentationResources createUnzipDocumentationResourcesTask(Project project) {
-		Configuration documentationResources = project.getConfigurations().maybeCreate("documentationResources");
-		documentationResources.getDependencies()
-				.add(project.getDependencies().create("io.spring.docresources:spring-doc-resources:0.1.3.RELEASE"));
-		UnzipDocumentationResources unzipResources = project.getTasks().create("unzipDocumentationResources",
-				UnzipDocumentationResources.class);
-		unzipResources.setResources(documentationResources);
-		unzipResources.setOutputDir(new File(project.getBuildDir(), "docs/resources"));
-		return unzipResources;
-	}
-
 	private Sync createSyncDocumentationSourceTask(Project project, AbstractAsciidoctorTask asciidoctorTask) {
 		Sync syncDocumentationSource = project.getTasks()
 				.create("syncDocumentationSourceFor" + capitalize(asciidoctorTask.getName()), Sync.class);
@@ -162,6 +153,17 @@ public class AsciidoctorConventionPlugin implements Plugin<Project> {
 		asciidoctorTask.dependsOn(syncDocumentationSource);
 		asciidoctorTask.setSourceDir(project.relativePath(new File(syncDocumentationSource.getDestinationDir(), asciidoctorTask.getSourceDir().getName())));
 		return syncDocumentationSource;
+	}
+
+	private static String capitalize(String value) {
+		if (value == null) {
+			return null;
+		}
+		char [] chars = value.toCharArray();
+		if (chars.length > 0) {
+			chars[0] = Character.toUpperCase(chars[0]);
+		}
+		return new String(chars);
 	}
 
 
@@ -205,56 +207,6 @@ public class AsciidoctorConventionPlugin implements Plugin<Project> {
 		attributes.put("sectnums", "");
 		attributes.put("today-year", LocalDate.now().getYear());
 		asciidoctorTask.attributes(attributes);
-	}
-
-	private static String capitalize(String value) {
-		if (value == null) {
-			return null;
-		}
-		char [] chars = value.toCharArray();
-		if (chars.length > 0) {
-			chars[0] = Character.toUpperCase(chars[0]);
-		}
-		return new String(chars);
-	}
-
-	/**
-	 * {@link Task} for unzipping the documentation resources.
-	 */
-	public static class UnzipDocumentationResources extends DefaultTask {
-
-		private FileCollection resources;
-
-		private File outputDir;
-
-		@InputFiles
-		public FileCollection getResources() {
-			return this.resources;
-		}
-
-		public void setResources(FileCollection resources) {
-			this.resources = resources;
-		}
-
-		@OutputDirectory
-		public File getOutputDir() {
-			return this.outputDir;
-		}
-
-		public void setOutputDir(File outputDir) {
-			this.outputDir = outputDir;
-		}
-
-		@TaskAction
-		void syncDocumentationResources() {
-			getProject().sync((copySpec) -> {
-				copySpec.into(this.outputDir);
-				for (File resource : this.resources) {
-					copySpec.from(getProject().zipTree(resource));
-				}
-			});
-		}
-
 	}
 
 }
