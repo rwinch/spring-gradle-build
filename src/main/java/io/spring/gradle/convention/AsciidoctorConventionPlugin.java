@@ -86,13 +86,6 @@ public class AsciidoctorConventionPlugin implements Plugin<Project> {
 				configureOptions(asciidoctorTask);
 				asciidoctorTask.baseDirFollowsSourceFile();
 				Sync syncSource = createSyncDocumentationSourceTask(project, asciidoctorTask);
-				syncSource.from(unzipResources, new Action<CopySpec>() {
-					@Override
-					public void execute(CopySpec copySpec) {
-						copySpec.into(asciidoctorTask.getOutputDir().getName());
-						copySpec.setDuplicatesStrategy(DuplicatesStrategy.EXCLUDE);
-					}
-				});
 				asciidoctorTask.resources(new Action<CopySpec>() {
 					@Override
 					public void execute(CopySpec copySpec) {
