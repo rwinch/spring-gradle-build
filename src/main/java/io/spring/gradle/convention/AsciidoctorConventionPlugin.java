@@ -36,11 +36,9 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.DependencySet;
 import org.gradle.api.artifacts.dsl.RepositoryHandler;
 import org.gradle.api.file.CopySpec;
-import org.gradle.api.file.DuplicatesStrategy;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputDirectory;
-import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.TaskAction;
 
 /**
@@ -85,7 +83,6 @@ public class AsciidoctorConventionPlugin implements Plugin<Project> {
 				configureCommonAttributes(project, asciidoctorTask);
 				configureOptions(asciidoctorTask);
 				asciidoctorTask.baseDirFollowsSourceFile();
-				Sync syncSource = createSyncDocumentationSourceTask(project, asciidoctorTask);
 				asciidoctorTask.resources(new Action<CopySpec>() {
 					@Override
 					public void execute(CopySpec copySpec) {
@@ -126,28 +123,6 @@ public class AsciidoctorConventionPlugin implements Plugin<Project> {
 			}
 		});
 		asciidoctorTask.configurations(extensionsConfiguration);
-	}
-
-	private Sync createSyncDocumentationSourceTask(Project project, AbstractAsciidoctorTask asciidoctorTask) {
-		Sync syncDocumentationSource = project.getTasks()
-				.create("syncDocumentationSourceFor" + capitalize(asciidoctorTask.getName()), Sync.class);
-		File destinationDir = new File(project.getBuildDir(), "docs/src/" + asciidoctorTask.getName());
-		syncDocumentationSource.setDestinationDir(destinationDir);
-		syncDocumentationSource.from(asciidoctorTask.getSourceDir().getParent());
-		asciidoctorTask.dependsOn(syncDocumentationSource);
-		asciidoctorTask.setSourceDir(project.relativePath(new File(syncDocumentationSource.getDestinationDir(), asciidoctorTask.getSourceDir().getName())));
-		return syncDocumentationSource;
-	}
-
-	private static String capitalize(String value) {
-		if (value == null) {
-			return null;
-		}
-		char [] chars = value.toCharArray();
-		if (chars.length > 0) {
-			chars[0] = Character.toUpperCase(chars[0]);
-		}
-		return new String(chars);
 	}
 
 	private UnzipDocumentationResources createUnzipDocumentationResourcesTask(Project project) {
