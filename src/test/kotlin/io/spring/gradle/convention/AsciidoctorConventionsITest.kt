@@ -16,7 +16,7 @@ internal class AsciidoctorConventionsITest {
     fun asciidocWhenSimpleThenSuccess() {
         TestKit().use { testKit ->
             val build = testKit
-                    .withProjectResource("convention/asciidoctor/simple")
+                    .withProjectResource(projectResource("simple"))
                     .withArguments(ASCIIDOCTOR_TASK_NAME)
                     .forwardOutput()
                     .build()
@@ -28,7 +28,7 @@ internal class AsciidoctorConventionsITest {
     fun asciidocWhenMultipleBackendsThenSuccess() {
         TestKit().use { testKit ->
             val build = testKit
-                    .withProjectResource("convention/asciidoctor/backends")
+                    .withProjectResource(projectResource("backends"))
                     .withArguments(ASCIIDOCTOR_TASK_NAME)
                     .forwardOutput()
                     .build()
@@ -40,7 +40,7 @@ internal class AsciidoctorConventionsITest {
     fun asciidocWhenBlockSwitchThenSuccess() {
         TestKit().use { testKit ->
             val build = testKit
-                    .withProjectResource("convention/asciidoctor/blockswitch")
+                    .withProjectResource(projectResource("blockswitch"))
                     .withArguments(ASCIIDOCTOR_TASK_NAME)
                     .forwardOutput()
                     .build()
@@ -54,7 +54,7 @@ internal class AsciidoctorConventionsITest {
     fun asciidocWhenCustomDocinfoThenSuccess() {
         TestKit().use { testKit ->
             val build = testKit
-                    .withProjectResource("convention/asciidoctor/custom-docinfo")
+                    .withProjectResource(projectResource("custom-docinfo"))
                     .withArguments(ASCIIDOCTOR_TASK_NAME)
                     .forwardOutput()
                     .build()
@@ -68,10 +68,12 @@ internal class AsciidoctorConventionsITest {
     fun asciidocWhenMissingAttributeThenFailure() {
         TestKit().use { testKit ->
             val build = testKit
-                    .withProjectResource("convention/asciidoctor/missing-attribute")
+                    .withProjectResource(projectResource("missing-attribute"))
                     .withArguments(ASCIIDOCTOR_TASK_NAME)
                     .buildAndFail()
             assertThat(build.task(ASCIIDOCTOR_TASK_NAME)?.outcome).isEqualTo(TaskOutcome.FAILED)
         }
     }
+
+    private fun projectResource(name: String) = "convention/asciidoctor/${name}"
 }
