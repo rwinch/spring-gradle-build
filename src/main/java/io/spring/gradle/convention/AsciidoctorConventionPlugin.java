@@ -78,7 +78,6 @@ public class AsciidoctorConventionPlugin implements Plugin<Project> {
 			UnzipDocumentationResources unzipResources = createUnzipDocumentationResourcesTask(project);
 			project.getTasks().withType(AbstractAsciidoctorTask.class, (asciidoctorTask) -> {
 				asciidoctorTask.dependsOn(unzipResources);
-				configureHtmlOnlyAttributes(project, asciidoctorTask);
 				configureExtensions(project, asciidoctorTask);
 				configureCommonAttributes(project, asciidoctorTask);
 				configureOptions(asciidoctorTask);
