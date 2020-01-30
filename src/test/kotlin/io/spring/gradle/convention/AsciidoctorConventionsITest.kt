@@ -4,6 +4,7 @@ import io.spring.gradle.testkit.junit.TestKit
 import org.assertj.core.api.Assertions.assertThat
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.jupiter.api.Test
+import java.io.File
 
 /**
  * @author Rob Winch
@@ -32,6 +33,20 @@ internal class AsciidoctorConventionsITest {
                     .forwardOutput()
                     .build()
             assertThat(build.task(ASCIIDOCTOR_TASK_NAME)?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+        }
+    }
+
+    @Test
+    fun asciidocWhenBlockSwitchThenSuccess() {
+        TestKit().use { testKit ->
+            val build = testKit
+                    .withProjectResource("convention/asciidoctor/blockswitch")
+                    .withArguments(ASCIIDOCTOR_TASK_NAME)
+                    .forwardOutput()
+                    .build()
+            assertThat(build.task(ASCIIDOCTOR_TASK_NAME)?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+            val indexHtml = File(testKit.projectDir, "build/docs/asciidoc/index.html").readText()
+            assertThat(indexHtml).contains(".switch--item.selected")
         }
     }
 

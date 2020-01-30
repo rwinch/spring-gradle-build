@@ -113,7 +113,7 @@ public class AsciidoctorConventionPlugin implements Plugin<Project> {
 				RepositoryHandler repositories = project.getRepositories();
 				if (repositories.isEmpty()) {
 					repositories.maven(repo -> {
-						repo.setUrl(URI.create("https://repo.spring.io/libs-release"));
+						repo.setUrl(URI.create("https://repo.spring.io/libs-snapshot"));
 					});
 				}
 			}
@@ -129,7 +129,7 @@ public class AsciidoctorConventionPlugin implements Plugin<Project> {
 		extensionsConfiguration.defaultDependencies(new Action<DependencySet>() {
 			@Override
 			public void execute(DependencySet dependencies) {
-				dependencies.add(project.getDependencies().create("io.spring.asciidoctor:spring-asciidoctor-extensions-block-switch:0.3.0.RELEASE"));
+				dependencies.add(project.getDependencies().create("io.spring.asciidoctor:spring-asciidoctor-extensions-block-switch:0.4.0.BUILD-SNAPSHOT"));
 			}
 		});
 		asciidoctorTask.configurations(extensionsConfiguration);
