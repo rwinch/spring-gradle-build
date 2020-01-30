@@ -93,20 +93,10 @@ public class AsciidoctorConventionPlugin implements Plugin<Project> {
 						copySpec.setDuplicatesStrategy(DuplicatesStrategy.EXCLUDE);
 					}
 				});
-
-				asciidoctorTask.doFirst(new Action<Task>() {
-
+				asciidoctorTask.resources(new Action<CopySpec>() {
 					@Override
-					public void execute(Task task) {
-						for (File backendOutputDir : asciidoctorTask.getBackendOutputDirectories()) {
-							System.out.println(asciidoctorTask.getSourceDir() + " to outputDir "
-									+ backendOutputDir);
-							project.copy((spec) -> {
-								spec.from(asciidoctorTask.getSourceDir());
-								spec.into(backendOutputDir);
-								spec.include("css/**", "js/**");
-							});
-						}
+					public void execute(CopySpec copySpec) {
+						copySpec.from(unzipResources);
 					}
 				});
 				if (asciidoctorTask instanceof AsciidoctorTask) {

@@ -29,6 +29,6 @@ class TestKit: AutoCloseable {
     }
 
     override fun close() {
-        buildDir.deleteRecursively()
+//        buildDir.deleteRecursively()
     }
 }
