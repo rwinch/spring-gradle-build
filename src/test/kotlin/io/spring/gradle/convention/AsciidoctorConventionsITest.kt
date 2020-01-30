@@ -65,6 +65,33 @@ internal class AsciidoctorConventionsITest {
     }
 
     @Test
+    fun asciidocWhenIncludeParentDirThenSuccess() {
+        TestKit().use { testKit ->
+            val build = testKit
+                    .withProjectResource(projectResource("include-parent"))
+                    .withArguments(ASCIIDOCTOR_TASK_NAME)
+                    .forwardOutput()
+                    .build()
+            assertThat(build.task(ASCIIDOCTOR_TASK_NAME)?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+            val indexHtml = File(testKit.projectDir, "build/docs/asciidoc/index.html").readText()
+            assertThat(indexHtml).contains("Included Content")
+        }
+    }
+
+    @Test
+    fun asciidocWhenCustomCssThenSuccess() {
+        TestKit().use { testKit ->
+            val build = testKit
+                    .withProjectResource(projectResource("custom-css"))
+                    .withArguments(ASCIIDOCTOR_TASK_NAME)
+                    .forwardOutput()
+                    .build()
+            assertThat(build.task(ASCIIDOCTOR_TASK_NAME)?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+            assertThat(File(testKit.projectDir, "build/docs/asciidoc/css/stylesheet.css")).exists()
+        }
+    }
+
+    @Test
     fun asciidocWhenMissingAttributeThenFailure() {
         TestKit().use { testKit ->
             val build = testKit
