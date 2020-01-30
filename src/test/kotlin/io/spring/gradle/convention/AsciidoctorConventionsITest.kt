@@ -51,6 +51,20 @@ internal class AsciidoctorConventionsITest {
     }
 
     @Test
+    fun asciidocWhenCustomDocinfoThenSuccess() {
+        TestKit().use { testKit ->
+            val build = testKit
+                    .withProjectResource("convention/asciidoctor/custom-docinfo")
+                    .withArguments(ASCIIDOCTOR_TASK_NAME)
+                    .forwardOutput()
+                    .build()
+            assertThat(build.task(ASCIIDOCTOR_TASK_NAME)?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+            val indexHtml = File(testKit.projectDir, "build/docs/asciidoc/index.html").readText()
+            assertThat(indexHtml).contains("Custom Footer")
+        }
+    }
+
+    @Test
     fun asciidocWhenMissingAttributeThenFailure() {
         TestKit().use { testKit ->
             val build = testKit
