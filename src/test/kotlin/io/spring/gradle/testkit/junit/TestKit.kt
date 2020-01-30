@@ -9,7 +9,7 @@ import java.nio.file.Paths
  * @author Rob Winch
  */
 class TestKit: AutoCloseable {
-    val buildDir: File = createTempDir("testkit")
+    val projectDir: File = createTempDir("testkit")
 
     fun withProjectResource(projectResourceName: String): GradleRunner {
         val classLoader = javaClass.classLoader
@@ -22,9 +22,9 @@ class TestKit: AutoCloseable {
     }
 
     fun withProjectDir(projectDir: File): GradleRunner {
-        projectDir.copyRecursively(buildDir)
+        projectDir.copyRecursively(this.projectDir)
         return GradleRunner.create()
-                .withProjectDir(buildDir)
+                .withProjectDir(this.projectDir)
                 .withPluginClasspath()
     }
 
