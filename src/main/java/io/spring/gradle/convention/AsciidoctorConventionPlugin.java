@@ -77,7 +77,7 @@ public class AsciidoctorConventionPlugin implements Plugin<Project> {
 		project.getPlugins().withType(AsciidoctorJPlugin.class, (asciidoctorPlugin) -> {
 			createDefaultAsciidoctorRepository(project);
 			makeAllWarningsFatal(project);
-			Sync unzipResources = createUnzipDocumentationResourcesTask(project);
+			UnzipDocumentationResources unzipResources = createUnzipDocumentationResourcesTask(project);
 			project.getTasks().withType(AbstractAsciidoctorTask.class, (asciidoctorTask) -> {
 				asciidoctorTask.dependsOn(unzipResources);
 				configureHtmlOnlyAttributes(project, asciidoctorTask);
@@ -86,12 +86,13 @@ public class AsciidoctorConventionPlugin implements Plugin<Project> {
 				configureOptions(asciidoctorTask);
 				asciidoctorTask.baseDirFollowsSourceFile();
 				Sync syncSource = createSyncDocumentationSourceTask(project, asciidoctorTask);
-				syncSource.from(unzipResources, (resources) -> resources.into(asciidoctorTask.getOutputDir().getName(), new Action<CopySpec>() {
+				syncSource.from(unzipResources, new Action<CopySpec>() {
 					@Override
 					public void execute(CopySpec copySpec) {
+						copySpec.into(asciidoctorTask.getOutputDir().getName());
 						copySpec.setDuplicatesStrategy(DuplicatesStrategy.EXCLUDE);
 					}
-				}));
+				});
 
 				asciidoctorTask.doFirst(new Action<Task>() {
 
@@ -116,17 +117,17 @@ public class AsciidoctorConventionPlugin implements Plugin<Project> {
 	}
 
 	private void createDefaultAsciidoctorRepository(Project project) {
-//		project.getGradle().afterProject(new Action<Project>() {
-//			@Override
-//			public void execute(Project project) {
+		project.getGradle().afterProject(new Action<Project>() {
+			@Override
+			public void execute(Project project) {
 				RepositoryHandler repositories = project.getRepositories();
 				if (repositories.isEmpty()) {
 					repositories.maven(repo -> {
 						repo.setUrl(URI.create("https://repo.spring.io/libs-release"));
 					});
 				}
-//			}
-//		});
+			}
+		});
 	}
 
 	private void makeAllWarningsFatal(Project project) {
@@ -166,17 +167,14 @@ public class AsciidoctorConventionPlugin implements Plugin<Project> {
 		return new String(chars);
 	}
 
-
-	private Sync createUnzipDocumentationResourcesTask(Project project) {
+	private UnzipDocumentationResources createUnzipDocumentationResourcesTask(Project project) {
 		Configuration documentationResources = project.getConfigurations().maybeCreate("documentationResources");
 		documentationResources.getDependencies()
 				.add(project.getDependencies().create("io.spring.docresources:spring-doc-resources:0.1.3.RELEASE"));
-		Sync unzipResources = project.getTasks().create("unzipDocumentationResources",
-				Sync.class);
-		unzipResources.into(new File(project.getBuildDir(), "docs/resources"));
-		documentationResources.getAsFileTree().forEach(file ->
-			unzipResources.from(project.zipTree(file))
-		);
+		UnzipDocumentationResources unzipResources = project.getTasks().create("unzipDocumentationResources",
+				UnzipDocumentationResources.class);
+		unzipResources.setResources(documentationResources);
+		unzipResources.setOutputDir(new File(project.getBuildDir(), "docs/resources"));
 		return unzipResources;
 	}
 
@@ -209,4 +207,42 @@ public class AsciidoctorConventionPlugin implements Plugin<Project> {
 		asciidoctorTask.attributes(attributes);
 	}
 
+	/**
+	 * {@link Task} for unzipping the documentation resources.
+	 */
+	public static class UnzipDocumentationResources extends DefaultTask {
+
+		private FileCollection resources;
+
+		private File outputDir;
+
+		@InputFiles
+		public FileCollection getResources() {
+			return this.resources;
+		}
+
+		public void setResources(FileCollection resources) {
+			this.resources = resources;
+		}
+
+		@OutputDirectory
+		public File getOutputDir() {
+			return this.outputDir;
+		}
+
+		public void setOutputDir(File outputDir) {
+			this.outputDir = outputDir;
+		}
+
+		@TaskAction
+		void syncDocumentationResources() {
+			getProject().sync((copySpec) -> {
+				copySpec.into(this.outputDir);
+				for (File resource : this.resources) {
+					copySpec.from(getProject().zipTree(resource));
+				}
+			});
+		}
+
+	}
 }
